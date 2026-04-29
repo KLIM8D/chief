@@ -416,6 +416,44 @@ func TestValidateEmptyPatternIsValid(t *testing.T) {
 	}
 }
 
+func TestValidateBranchPattern(t *testing.T) {
+	t.Run("empty returns nil regex and nil error", func(t *testing.T) {
+		re, err := ValidateBranchPattern("")
+		if err != nil {
+			t.Fatalf("unexpected error for empty pattern: %v", err)
+		}
+		if re != nil {
+			t.Error("expected nil *Regexp for empty pattern")
+		}
+	})
+
+	t.Run("valid pattern returns compiled regex", func(t *testing.T) {
+		re, err := ValidateBranchPattern("^release/.*$")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if re == nil {
+			t.Fatal("expected non-nil *Regexp for valid pattern")
+		}
+		if !re.MatchString("release/v1") {
+			t.Error("expected compiled regex to match release/v1")
+		}
+		if re.MatchString("main") {
+			t.Error("expected compiled regex not to match main")
+		}
+	})
+
+	t.Run("invalid pattern returns error and nil regex", func(t *testing.T) {
+		re, err := ValidateBranchPattern("[unclosed")
+		if err == nil {
+			t.Fatal("expected error for invalid pattern, got nil")
+		}
+		if re != nil {
+			t.Error("expected nil *Regexp on validation failure")
+		}
+	})
+}
+
 func TestLoadInvalidYAML(t *testing.T) {
 	dir := t.TempDir()
 	chiefDir := filepath.Join(dir, ".chief")

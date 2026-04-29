@@ -1466,7 +1466,11 @@ func (a App) handleSettingsKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if a.settingsOverlay.IsEditing() {
 		switch msg.String() {
 		case "enter":
-			a.settingsOverlay.ConfirmEdit()
+			if err := a.settingsOverlay.ConfirmEdit(); err != nil {
+				// Validation rejected the value; stay in edit mode so the
+				// user can fix it. The overlay renders the error inline.
+				return a, nil
+			}
 			a.settingsOverlay.ApplyToConfig(a.config)
 			_ = config.Save(a.baseDir, a.config)
 			return a, nil

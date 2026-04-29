@@ -42,7 +42,7 @@ onComplete:
 | `onComplete.push` | bool | `false` | Automatically push the branch to remote when a PRD completes |
 | `onComplete.createPR` | bool | `false` | Automatically create a pull request when a PRD completes (requires `gh` CLI) |
 
-These settings are not yet exposed in the in-app Settings TUI; edit `.chief/config.yaml` directly. If you write `promptBranchPattern: ""` explicitly, Chief skips branch-name matching entirely; only `alwaysPrompt` will trigger the prompt. Default regex: `^(main|master)$`. The `\|` shown in the default column above is Markdown escaping for the table separator; the actual regex value uses an unescaped `|`.
+If you write `promptBranchPattern: ""` explicitly, Chief skips branch-name matching entirely; only `alwaysPrompt` will trigger the prompt. Default regex: `^(main|master)$`. The `\|` shown in the default column above is Markdown escaping for the table separator; the actual regex value uses an unescaped `|`.
 
 ### Example Configurations
 
@@ -106,7 +106,7 @@ Press `,` from any view in the TUI to open the Settings overlay. This provides a
 Settings are organized by section:
 
 - **Agent** — Watchdog timeout (string, editable inline; Go duration like `20m`)
-- **Worktree** — Setup command (string, editable inline)
+- **Worktree** — Setup command (string, editable inline), Always prompt for worktree (toggle), Prompt branch pattern (regex, editable inline; invalid regex is rejected with an inline error so the editor stays open)
 - **Bash** — Command timeout (string, editable inline; Go duration like `30s`, `5m`)
 - **On Complete** — Push to remote (toggle), Create pull request (toggle)
 

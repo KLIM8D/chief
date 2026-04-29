@@ -160,13 +160,19 @@ func (c *Config) Validate() error {
 	return c.compilePromptRegex()
 }
 
+// ValidateBranchPattern compiles pattern as a worktree prompt-branch regex.
+// An empty pattern is valid and returns (nil, nil). The returned compile
+// error is bare; callers add field-name context when surfacing it.
+func ValidateBranchPattern(pattern string) (*regexp.Regexp, error) {
+	if pattern == "" {
+		return nil, nil
+	}
+	return regexp.Compile(pattern)
+}
+
 // compilePromptRegex compiles and caches the worktree prompt-branch regex.
 func (c *Config) compilePromptRegex() error {
-	if c.Worktree.PromptBranchPattern == "" {
-		c.promptBranchRegex = nil
-		return nil
-	}
-	re, err := regexp.Compile(c.Worktree.PromptBranchPattern)
+	re, err := ValidateBranchPattern(c.Worktree.PromptBranchPattern)
 	if err != nil {
 		return fmt.Errorf("invalid worktree.promptBranchPattern %q: %w", c.Worktree.PromptBranchPattern, err)
 	}
