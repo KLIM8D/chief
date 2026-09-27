@@ -34,10 +34,10 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "chief [prd-name|path]",
-	Short: "Chief - Autonomous PRD Agent",
-	Long:  "Chief orchestrates AI agents to implement PRDs (Product Requirements Documents) autonomously.",
-	RunE:  runTUI,
+	Use:           "chief [prd-name|path]",
+	Short:         "Chief - Autonomous PRD Agent",
+	Long:          "Chief orchestrates AI agents to implement PRDs (Product Requirements Documents) autonomously.",
+	RunE:          runTUI,
 	Args:          cobra.ArbitraryArgs,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -146,6 +146,17 @@ func runTUI(command *cobra.Command, args []string) error {
 
 	// Non-blocking version check on startup
 	cmd.CheckVersionOnStartup(Version)
+
+	if cwd, err := os.Getwd(); err == nil {
+		if cfg, err := config.Load(cwd); err == nil && cfg.Theme != "" {
+			theme, ok := tui.ThemeByName(cfg.Theme)
+			if !ok {
+				fmt.Fprintf(os.Stderr, "Warning: unknown theme %q, falling back to \"catppuccin-mocha\"\n", cfg.Theme)
+			}
+			tui.ActiveTheme = theme
+		}
+	}
+	tui.InitStyles()
 
 	provider, err := resolveProvider()
 	if err != nil {
