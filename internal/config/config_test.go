@@ -566,82 +566,6 @@ func TestLoadUser_FileMalformed(t *testing.T) {
 	}
 }
 
-func TestMerge_ProjectOverridesUser(t *testing.T) {
-	user := &Config{
-		Theme:    "user-theme",
-		Worktree: WorktreeConfig{Setup: "user-setup"},
-		OnComplete: OnCompleteConfig{Push: false, CreatePR: false},
-		Agent:    AgentConfig{Provider: "claude", CLIPath: "/usr/bin/claude"},
-	}
-	project := &Config{
-		Theme:    "project-theme",
-		Worktree: WorktreeConfig{Setup: "project-setup"},
-		OnComplete: OnCompleteConfig{Push: true, CreatePR: true},
-		Agent:    AgentConfig{Provider: "codex", CLIPath: "/usr/bin/codex"},
-	}
-	got := Merge(user, project)
-	if got.Theme != "project-theme" {
-		t.Errorf("Theme: want %q got %q", "project-theme", got.Theme)
-	}
-	if got.Worktree.Setup != "project-setup" {
-		t.Errorf("Worktree.Setup: want %q got %q", "project-setup", got.Worktree.Setup)
-	}
-	if !got.OnComplete.Push {
-		t.Error("OnComplete.Push: want true")
-	}
-	if !got.OnComplete.CreatePR {
-		t.Error("OnComplete.CreatePR: want true")
-	}
-	if got.Agent.Provider != "codex" {
-		t.Errorf("Agent.Provider: want %q got %q", "codex", got.Agent.Provider)
-	}
-	if got.Agent.CLIPath != "/usr/bin/codex" {
-		t.Errorf("Agent.CLIPath: want %q got %q", "/usr/bin/codex", got.Agent.CLIPath)
-	}
-}
-
-func TestMerge_UserFillsGapWhenProjectEmpty(t *testing.T) {
-	user := &Config{
-		Theme:    "user-theme",
-		Worktree: WorktreeConfig{Setup: "user-setup"},
-		OnComplete: OnCompleteConfig{Push: true, CreatePR: true},
-		Agent:    AgentConfig{Provider: "claude", CLIPath: "/usr/bin/claude"},
-	}
-	project := Default()
-	got := Merge(user, project)
-	if got.Theme != "user-theme" {
-		t.Errorf("Theme: want %q got %q", "user-theme", got.Theme)
-	}
-	if got.Worktree.Setup != "user-setup" {
-		t.Errorf("Worktree.Setup: want %q got %q", "user-setup", got.Worktree.Setup)
-	}
-	if !got.OnComplete.Push {
-		t.Error("OnComplete.Push: want true")
-	}
-	if !got.OnComplete.CreatePR {
-		t.Error("OnComplete.CreatePR: want true")
-	}
-	if got.Agent.Provider != "claude" {
-		t.Errorf("Agent.Provider: want %q got %q", "claude", got.Agent.Provider)
-	}
-}
-
-func TestMerge_BothEmpty(t *testing.T) {
-	got := Merge(Default(), Default())
-	if got.Theme != "" {
-		t.Errorf("Theme: want empty got %q", got.Theme)
-	}
-	if got.Worktree.Setup != "" {
-		t.Errorf("Worktree.Setup: want empty got %q", got.Worktree.Setup)
-	}
-	if got.OnComplete.Push {
-		t.Error("OnComplete.Push: want false")
-	}
-	if got.OnComplete.CreatePR {
-		t.Error("OnComplete.CreatePR: want false")
-	}
-}
-
 func TestEndToEnd_UserConfigOnly(t *testing.T) {
 	xdgDir := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", xdgDir)
@@ -691,6 +615,88 @@ func TestEndToEnd_ProjectOverridesUser(t *testing.T) {
 	}
 	if cfg.Theme != "dracula" {
 		t.Errorf("expected theme %q, got %q", "dracula", cfg.Theme)
+	}
+}
+
+func TestEndToEnd_ProjectOverridesUserWithZeroValue(t *testing.T) {
+	xdgDir := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", xdgDir)
+
+	cfgDir := filepath.Join(xdgDir, "chief")
+	if err := os.MkdirAll(cfgDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cfgDir, "config.yaml"), []byte("onComplete:\n  push: true\n  createPR: true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := t.TempDir()
+	chiefDir := filepath.Join(projectDir, ".chief")
+	if err := os.MkdirAll(chiefDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// The project explicitly opts out of both, even though the user default is true.
+	if err := os.WriteFile(filepath.Join(chiefDir, "config.yaml"), []byte("onComplete:\n  push: false\n  createPR: false\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load(projectDir)
+	if err != nil {
+		t.Fatalf("Load failed: %v", err)
+	}
+	if cfg.OnComplete.Push {
+		t.Error("expected project's explicit push: false to override the user default")
+	}
+	if cfg.OnComplete.CreatePR {
+		t.Error("expected project's explicit createPR: false to override the user default")
+	}
+}
+
+func TestSaveValue_KeepsInheritedKeysOutOfProject(t *testing.T) {
+	xdgDir := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", xdgDir)
+
+	cfgDir := filepath.Join(xdgDir, "chief")
+	if err := os.MkdirAll(cfgDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cfgDir, "config.yaml"), []byte("onComplete:\n  push: true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := t.TempDir()
+	chiefDir := filepath.Join(projectDir, ".chief")
+	if err := os.MkdirAll(chiefDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(chiefDir, "config.yaml"), []byte("worktree:\n  setup: npm install\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := SaveValue(projectDir, "onComplete.createPR", true); err != nil {
+		t.Fatalf("SaveValue failed: %v", err)
+	}
+
+	cfg, err := Load(projectDir)
+	if err != nil {
+		t.Fatalf("Load failed: %v", err)
+	}
+	if !cfg.OnComplete.Push {
+		t.Error("expected push to keep inheriting true from the user config")
+	}
+	if !cfg.OnComplete.CreatePR {
+		t.Error("expected createPR: true from the saved project value")
+	}
+	if cfg.Worktree.Setup != "npm install" {
+		t.Errorf("expected existing project key to survive, got %q", cfg.Worktree.Setup)
+	}
+
+	data, err := os.ReadFile(filepath.Join(chiefDir, "config.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "push") {
+		t.Errorf("expected push to stay out of the project file, got:\n%s", data)
 	}
 }
 
