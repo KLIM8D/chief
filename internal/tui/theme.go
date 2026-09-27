@@ -4,34 +4,36 @@ import "github.com/charmbracelet/lipgloss"
 
 // Theme holds all color values used throughout the TUI.
 type Theme struct {
-	PrimaryColor    lipgloss.Color
-	SuccessColor    lipgloss.Color
-	WarningColor    lipgloss.Color
-	ErrorColor      lipgloss.Color
-	MutedColor      lipgloss.Color
-	BorderColor     lipgloss.Color
-	TextColor       lipgloss.Color
-	TextMutedColor  lipgloss.Color
-	TextBrightColor lipgloss.Color
-	BgColor         lipgloss.Color
-	BgSelectedColor lipgloss.Color
+	PrimaryColor     lipgloss.Color
+	SuccessColor     lipgloss.Color
+	WarningColor     lipgloss.Color
+	ErrorColor       lipgloss.Color
+	MutedColor       lipgloss.Color
+	BorderColor      lipgloss.Color
+	TextColor        lipgloss.Color
+	TextMutedColor   lipgloss.Color
+	TextBrightColor  lipgloss.Color
+	BgColor          lipgloss.Color
+	BgSelectedColor  lipgloss.Color
 	BgHighlightColor lipgloss.Color
+	WarningBgColor   lipgloss.Color
 }
 
 // CatppuccinMochaTheme is the default theme based on the Catppuccin Mocha palette.
 var CatppuccinMochaTheme = Theme{
-	PrimaryColor:    lipgloss.Color("#00D7FF"),
-	SuccessColor:    lipgloss.Color("#5AF78E"),
-	WarningColor:    lipgloss.Color("#F3F99D"),
-	ErrorColor:      lipgloss.Color("#FF5C57"),
-	MutedColor:      lipgloss.Color("#6C7086"),
-	BorderColor:     lipgloss.Color("#45475A"),
-	TextColor:       lipgloss.Color("#CDD6F4"),
-	TextMutedColor:  lipgloss.Color("#6C7086"),
-	TextBrightColor: lipgloss.Color("#FFFFFF"),
-	BgColor:         lipgloss.Color("#1E1E2E"),
+	PrimaryColor:     lipgloss.Color("#00D7FF"),
+	SuccessColor:     lipgloss.Color("#5AF78E"),
+	WarningColor:     lipgloss.Color("#F3F99D"),
+	ErrorColor:       lipgloss.Color("#FF5C57"),
+	MutedColor:       lipgloss.Color("#6C7086"),
+	BorderColor:      lipgloss.Color("#45475A"),
+	TextColor:        lipgloss.Color("#CDD6F4"),
+	TextMutedColor:   lipgloss.Color("#6C7086"),
+	TextBrightColor:  lipgloss.Color("#FFFFFF"),
+	BgColor:          lipgloss.Color("#1E1E2E"),
 	BgSelectedColor:  lipgloss.Color("#313244"),
 	BgHighlightColor: lipgloss.Color("#45475A"),
+	WarningBgColor:   lipgloss.Color("#3D3000"),
 }
 
 // GruvboxDarkTheme is a theme based on the Gruvbox Dark palette.
@@ -48,6 +50,7 @@ var GruvboxDarkTheme = Theme{
 	BgColor:          lipgloss.Color("#282828"),
 	BgSelectedColor:  lipgloss.Color("#3C3836"),
 	BgHighlightColor: lipgloss.Color("#504945"),
+	WarningBgColor:   lipgloss.Color("#4D3B0A"),
 }
 
 // ActiveTheme is the currently active theme, defaulting to CatppuccinMochaTheme.

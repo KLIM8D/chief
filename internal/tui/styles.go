@@ -24,6 +24,7 @@ var (
 	BgColor          lipgloss.Color
 	BgSelectedColor  lipgloss.Color
 	BgHighlightColor lipgloss.Color
+	WarningBgColor   lipgloss.Color
 )
 
 // Aliases for backward compatibility with existing code
@@ -51,7 +52,7 @@ var (
 
 // Panel styles
 var (
-	panelStyle      lipgloss.Style
+	panelStyle       lipgloss.Style
 	PanelActiveStyle lipgloss.Style
 	PanelTitleStyle  lipgloss.Style
 )
@@ -149,6 +150,7 @@ func InitStyles() {
 	BgColor = ActiveTheme.BgColor
 	BgSelectedColor = ActiveTheme.BgSelectedColor
 	BgHighlightColor = ActiveTheme.BgHighlightColor
+	WarningBgColor = ActiveTheme.WarningBgColor
 
 	primaryColor = PrimaryColor
 	successColor = SuccessColor
