@@ -42,10 +42,10 @@ func TestRunEditRejectsInvalidName(t *testing.T) {
 	}
 }
 
-func TestRunEditDefaultsToMain(t *testing.T) {
+func TestRunEditDefaultsToLegacyMainForBackwardCompat(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create main prd.md
+	// Create main prd.md (the pre-rename default location)
 	prdDir := filepath.Join(tmpDir, ".chief", "prds", "main")
 	if err := os.MkdirAll(prdDir, 0755); err != nil {
 		t.Fatalf("Failed to create directory: %v", err)
@@ -55,21 +55,25 @@ func TestRunEditDefaultsToMain(t *testing.T) {
 		t.Fatalf("Failed to create prd.md: %v", err)
 	}
 
-	// Test with empty name (should default to main)
-	opts := EditOptions{
-		Name:    "", // Empty should default to "main"
-		BaseDir: tmpDir,
+	// Existing projects created before the "default" rename must keep
+	// resolving to their "main" PRD when no name is given.
+	resolved := ResolveDefaultPRDName(tmpDir)
+	if resolved != "main" {
+		t.Errorf("Expected empty name to resolve to legacy 'main', got %q", resolved)
 	}
 
-	// We can't fully test RunEdit without Claude, but we can verify
-	// the name defaulting logic by checking if it would find the file
-	if opts.Name == "" {
-		opts.Name = "main"
-	}
-
-	prdPath := filepath.Join(tmpDir, ".chief", "prds", opts.Name, "prd.md")
+	prdPath := filepath.Join(tmpDir, ".chief", "prds", resolved, "prd.md")
 	if _, err := os.Stat(prdPath); os.IsNotExist(err) {
-		t.Error("Expected default name 'main' to resolve to existing prd.md")
+		t.Error("Expected default name to resolve to existing prd.md")
+	}
+}
+
+func TestRunEditDefaultsToDefaultForNewProjects(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	resolved := ResolveDefaultPRDName(tmpDir)
+	if resolved != "default" {
+		t.Errorf("Expected empty name to resolve to 'default' when no PRD exists, got %q", resolved)
 	}
 }
 

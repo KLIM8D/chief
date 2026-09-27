@@ -169,9 +169,11 @@ func runTUI(command *cobra.Command, args []string) error {
 func runTUIWithOptions(prdPath string, provider loop.Provider) error {
 	// If no PRD specified, try to find one
 	if prdPath == "" {
-		mainPath := ".chief/prds/main/prd.md"
-		if _, err := os.Stat(mainPath); err == nil {
-			prdPath = mainPath
+		// Try "default" first, falling back to the legacy "main" name so
+		// existing projects created before the rename keep working.
+		defaultPath := fmt.Sprintf(".chief/prds/%s/prd.md", cmd.ResolveDefaultPRDName("."))
+		if _, err := os.Stat(defaultPath); err == nil {
+			prdPath = defaultPath
 		} else {
 			prdPath = findAvailablePRD()
 		}

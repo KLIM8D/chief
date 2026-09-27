@@ -12,7 +12,7 @@ import (
 
 // EditOptions contains configuration for the edit command.
 type EditOptions struct {
-	Name     string        // PRD name (default: "main")
+	Name     string        // PRD name (default: "default")
 	BaseDir  string        // Base directory for .chief/prds/ (default: current directory)
 	Provider loop.Provider // Agent CLI provider (Claude or Codex)
 }
@@ -20,15 +20,15 @@ type EditOptions struct {
 // RunEdit edits an existing PRD by launching an interactive Claude session.
 func RunEdit(opts EditOptions) error {
 	// Set defaults
-	if opts.Name == "" {
-		opts.Name = "main"
-	}
 	if opts.BaseDir == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return fmt.Errorf("failed to get current directory: %w", err)
 		}
 		opts.BaseDir = cwd
+	}
+	if opts.Name == "" {
+		opts.Name = ResolveDefaultPRDName(opts.BaseDir)
 	}
 
 	// Validate name

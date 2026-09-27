@@ -94,7 +94,7 @@ func NewFirstTimeSetup(baseDir string, showGitignore bool) *FirstTimeSetup {
 	ti.Placeholder = ""
 	ti.CharLimit = maxPRDNameLength
 	ti.Width = prdNameModalWidth(0) - 8
-	ti.SetValue("main")
+	ti.SetValue("default")
 	ti.CursorEnd()
 	ti.Focus()
 

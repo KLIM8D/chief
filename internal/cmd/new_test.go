@@ -36,6 +36,25 @@ func TestIsValidPRDName(t *testing.T) {
 	}
 }
 
+func TestRunNewDefaultNameTargetsExistingLegacyMain(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// A project created before the "default" rename has its PRD at "main".
+	prdDir := filepath.Join(tmpDir, ".chief", "prds", "main")
+	if err := os.MkdirAll(prdDir, 0755); err != nil {
+		t.Fatalf("Failed to create directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(prdDir, "prd.md"), []byte("# Main PRD"), 0644); err != nil {
+		t.Fatalf("Failed to create prd.md: %v", err)
+	}
+
+	opts := NewOptions{BaseDir: tmpDir}
+	err := RunNew(opts)
+	if err == nil || !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("Expected 'chief new' with no name to resolve to the existing 'main' PRD and report it already exists, got: %v", err)
+	}
+}
+
 func TestRunNewCreatesDirectory(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
