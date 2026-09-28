@@ -15,7 +15,7 @@ import (
 
 // NewOptions contains configuration for the new command.
 type NewOptions struct {
-	Name     string        // PRD name (default: "main")
+	Name     string        // PRD name (default: "default")
 	Context  string        // Optional context to pass to the agent
 	BaseDir  string        // Base directory for .chief/prds/ (default: current directory)
 	Provider loop.Provider // Agent CLI provider (Claude or Codex)
@@ -24,15 +24,15 @@ type NewOptions struct {
 // RunNew creates a new PRD by launching an interactive agent session.
 func RunNew(opts NewOptions) error {
 	// Set defaults
-	if opts.Name == "" {
-		opts.Name = "main"
-	}
 	if opts.BaseDir == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return fmt.Errorf("failed to get current directory: %w", err)
 		}
 		opts.BaseDir = cwd
+	}
+	if opts.Name == "" {
+		opts.Name = ResolveDefaultPRDName(opts.BaseDir)
 	}
 
 	// Validate name (alphanumeric, -, _)
@@ -110,4 +110,30 @@ func isValidPRDName(name string) bool {
 		}
 	}
 	return true
+}
+
+// DefaultPRDName is the name used for the default PRD directory
+// (.chief/prds/default/) when no name is given.
+const DefaultPRDName = "default"
+
+// legacyDefaultPRDName is the default PRD directory name used before the
+// rename to "default" and is kept for backward compatibility.
+const legacyDefaultPRDName = "main"
+
+// ResolveDefaultPRDName determines which PRD name to use when the caller
+// didn't specify one. It prefers "default", the current convention, but
+// falls back to "main" when a PRD already exists there and no "default"
+// PRD has been created yet, so existing projects keep working unchanged.
+func ResolveDefaultPRDName(baseDir string) string {
+	defaultPath := filepath.Join(baseDir, ".chief", "prds", DefaultPRDName, "prd.md")
+	if _, err := os.Stat(defaultPath); err == nil {
+		return DefaultPRDName
+	}
+
+	legacyPath := filepath.Join(baseDir, ".chief", "prds", legacyDefaultPRDName, "prd.md")
+	if _, err := os.Stat(legacyPath); err == nil {
+		return legacyDefaultPRDName
+	}
+
+	return DefaultPRDName
 }

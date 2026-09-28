@@ -46,10 +46,10 @@ func sendKey(t *testing.T, f FirstTimeSetup, msg tea.KeyMsg) FirstTimeSetup {
 
 func TestPRDName_InitialCursorAtEnd(t *testing.T) {
 	setup := NewFirstTimeSetup(t.TempDir(), false)
-	if got, want := setup.ti.Value(), "main"; got != want {
+	if got, want := setup.ti.Value(), "default"; got != want {
 		t.Fatalf("initial value: got %q, want %q", got, want)
 	}
-	if got, want := setup.ti.Position(), len("main"); got != want {
+	if got, want := setup.ti.Position(), len("default"); got != want {
 		t.Fatalf("initial cursor position: got %d, want %d", got, want)
 	}
 }

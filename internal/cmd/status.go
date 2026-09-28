@@ -10,7 +10,7 @@ import (
 
 // StatusOptions contains configuration for the status command.
 type StatusOptions struct {
-	Name    string // PRD name (default: "main")
+	Name    string // PRD name (default: "default")
 	BaseDir string // Base directory for .chief/prds/ (default: current directory)
 }
 
@@ -18,15 +18,15 @@ type StatusOptions struct {
 // Returns nil on success, error otherwise. Exit code should be 0 on success.
 func RunStatus(opts StatusOptions) error {
 	// Set defaults
-	if opts.Name == "" {
-		opts.Name = "main"
-	}
 	if opts.BaseDir == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return fmt.Errorf("failed to get current directory: %w", err)
 		}
 		opts.BaseDir = cwd
+	}
+	if opts.Name == "" {
+		opts.Name = ResolveDefaultPRDName(opts.BaseDir)
 	}
 
 	// Build PRD path
