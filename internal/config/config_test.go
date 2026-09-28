@@ -700,6 +700,30 @@ func TestSaveValue_KeepsInheritedKeysOutOfProject(t *testing.T) {
 	}
 }
 
+func TestLoad_CompilesPatternFromUserConfig(t *testing.T) {
+	xdgDir := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", xdgDir)
+
+	cfgDir := filepath.Join(xdgDir, "chief")
+	if err := os.MkdirAll(cfgDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cfgDir, "config.yaml"), []byte("worktree:\n  promptBranchPattern: \"^develop$\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load(t.TempDir())
+	if err != nil {
+		t.Fatalf("Load failed: %v", err)
+	}
+	if !cfg.ShouldPromptForWorktree("develop") {
+		t.Error("expected the user config pattern to match develop")
+	}
+	if cfg.ShouldPromptForWorktree("main") {
+		t.Error("expected the default pattern to be replaced by the user config pattern")
+	}
+}
+
 func TestExists(t *testing.T) {
 	dir := t.TempDir()
 
