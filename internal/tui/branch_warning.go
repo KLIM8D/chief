@@ -371,7 +371,7 @@ func (b *BranchWarning) renderBranchName(content *strings.Builder) {
 		content.WriteString(branchLabelStyle.Render("Branch: "))
 		inputStyle := lipgloss.NewStyle().
 			Foreground(TextBrightColor).
-			Background(lipgloss.Color("237"))
+			Background(BgSelectedColor)
 		content.WriteString(inputStyle.Render(b.ti.View()))
 		content.WriteString("\n\n")
 	} else {

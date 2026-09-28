@@ -649,7 +649,7 @@ func (a *App) renderInterruptedWarning(width int) string {
 
 	// Warning box
 	warningStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("#3D3000")).
+		Background(WarningBgColor).
 		Foreground(WarningColor).
 		Padding(0, 1)
 
