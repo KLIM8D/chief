@@ -17,7 +17,7 @@ func newBranchEditMode(t *testing.T, value string) *BranchWarning {
 	bw := NewBranchWarning()
 	bw.SetSize(80, 24)
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
-	bw.SetDialogContext(DialogProtectedBranch)
+	bw.SetDialogContext(DialogWorktreePrompt)
 	bw.Reset()
 	bw.StartEditMode()
 	bw.ti.SetValue(value)
@@ -244,7 +244,7 @@ func TestBranchInput_EditValuePreservedAcrossEscapeAndRetoggle(t *testing.T) {
 	bw := NewBranchWarning()
 	bw.SetSize(80, 24)
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
-	bw.SetDialogContext(DialogProtectedBranch)
+	bw.SetDialogContext(DialogWorktreePrompt)
 	bw.Reset()
 
 	if got, want := bw.GetSuggestedBranch(), "chief/auth"; got != want {
@@ -284,7 +284,7 @@ func TestBranchInput_EditValuePreservedAcrossEscapeAndRetoggle(t *testing.T) {
 func TestBranchInput_StartEditModeReturnsBlinkCmd(t *testing.T) {
 	bw := NewBranchWarning()
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
-	bw.SetDialogContext(DialogProtectedBranch)
+	bw.SetDialogContext(DialogWorktreePrompt)
 	bw.Reset()
 	cmd := bw.StartEditMode()
 	if cmd == nil {
@@ -302,7 +302,7 @@ func TestBranchInput_StartEditModeReturnsBlinkCmd(t *testing.T) {
 func TestBranchInput_CancelEditModeBlursTextinput(t *testing.T) {
 	bw := NewBranchWarning()
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
-	bw.SetDialogContext(DialogProtectedBranch)
+	bw.SetDialogContext(DialogWorktreePrompt)
 	bw.Reset()
 	bw.StartEditMode()
 	if !bw.ti.Focused() {
@@ -335,7 +335,7 @@ func TestBranchInput_EmptyAndPopulatedFieldHaveSameRenderedWidth(t *testing.T) {
 	empty := NewBranchWarning()
 	empty.SetSize(100, 40)
 	empty.SetContext("main", "auth", ".chief/worktrees/auth/")
-	empty.SetDialogContext(DialogProtectedBranch)
+	empty.SetDialogContext(DialogWorktreePrompt)
 	empty.Reset()
 	empty.StartEditMode()
 	empty.ti.SetValue("")
@@ -344,7 +344,7 @@ func TestBranchInput_EmptyAndPopulatedFieldHaveSameRenderedWidth(t *testing.T) {
 	populated := NewBranchWarning()
 	populated.SetSize(100, 40)
 	populated.SetContext("main", "auth", ".chief/worktrees/auth/")
-	populated.SetDialogContext(DialogProtectedBranch)
+	populated.SetDialogContext(DialogWorktreePrompt)
 	populated.Reset()
 	populated.StartEditMode()
 	populated.ti.SetValue("chief/auth-system")
