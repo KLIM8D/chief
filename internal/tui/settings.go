@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -64,6 +65,8 @@ func (s *SettingsOverlay) LoadFromConfig(cfg *config.Config) {
 	s.items = []SettingsItem{
 		{Section: "Agent", Label: "Watchdog timeout", Key: "agent.watchdogTimeout", Type: SettingsItemString, StringVal: cfg.Agent.WatchdogTimeout},
 		{Section: "Worktree", Label: "Setup command", Key: "worktree.setup", Type: SettingsItemString, StringVal: cfg.Worktree.Setup},
+		{Section: "Worktree", Label: "Always prompt for worktree", Key: "worktree.alwaysPrompt", Type: SettingsItemBool, BoolVal: cfg.Worktree.AlwaysPrompt},
+		{Section: "Worktree", Label: "Prompt branch pattern", Key: "worktree.promptBranchPattern", Type: SettingsItemString, StringVal: cfg.Worktree.PromptBranchPattern},
 		{Section: "Bash", Label: "Command timeout", Key: "bash.timeout", Type: SettingsItemString, StringVal: cfg.Bash.Timeout},
 		{Section: "On Complete", Label: "Push to remote", Key: "onComplete.push", Type: SettingsItemBool, BoolVal: cfg.OnComplete.Push},
 		{Section: "On Complete", Label: "Create pull request", Key: "onComplete.createPR", Type: SettingsItemBool, BoolVal: cfg.OnComplete.CreatePR},
@@ -82,6 +85,10 @@ func (s *SettingsOverlay) ApplyToConfig(cfg *config.Config) {
 		switch item.Key {
 		case "worktree.setup":
 			cfg.Worktree.Setup = item.StringVal
+		case "worktree.alwaysPrompt":
+			cfg.Worktree.AlwaysPrompt = item.BoolVal
+		case "worktree.promptBranchPattern":
+			cfg.Worktree.PromptBranchPattern = item.StringVal
 		case "bash.timeout":
 			cfg.Bash.Timeout = item.StringVal
 		case "agent.watchdogTimeout":
@@ -122,19 +129,19 @@ func (s *SettingsOverlay) StartEditing() {
 	}
 }
 
-// ConfirmEdit saves the edit buffer to the selected item. If the buffer fails
-// per-key validation (e.g. an unparseable duration for bash.timeout), the
-// edit is rejected: editing stays active, editError is set, and the buffer is
-// preserved so the user can correct it.
-func (s *SettingsOverlay) ConfirmEdit() {
+// ConfirmEdit validates the edit buffer and, on success, writes it to the
+// selected item and exits edit mode. On failure (an unparseable duration or an
+// invalid branch regex), it sets editError, keeps the buffer, stays in edit
+// mode so the user can correct the value, and returns the error.
+func (s *SettingsOverlay) ConfirmEdit() error {
 	if !s.editing || s.selectedIndex >= len(s.items) {
-		return
+		return nil
 	}
 	item := &s.items[s.selectedIndex]
 	value := s.editBuffer
 	if msg := validateSetting(item.Key, value); msg != "" {
 		s.editError = msg
-		return
+		return errors.New(msg)
 	}
 	if isDurationKey(item.Key) {
 		value = strings.TrimSpace(value)
@@ -143,6 +150,7 @@ func (s *SettingsOverlay) ConfirmEdit() {
 	s.editing = false
 	s.editBuffer = ""
 	s.editError = ""
+	return nil
 }
 
 // isDurationKey reports whether key holds a Go duration string subject to
@@ -158,6 +166,12 @@ func isDurationKey(key string) bool {
 // validateSetting returns an empty string when value is acceptable for key,
 // or a human-readable error message otherwise.
 func validateSetting(key, value string) string {
+	if key == "worktree.promptBranchPattern" {
+		if _, err := config.ValidateBranchPattern(value); err != nil {
+			return fmt.Sprintf("invalid regex: %v", err)
+		}
+		return ""
+	}
 	if !isDurationKey(key) {
 		return ""
 	}
