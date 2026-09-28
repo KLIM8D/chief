@@ -611,8 +611,9 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if a.viewMode == ViewDashboard || a.viewMode == ViewLog || a.viewMode == ViewDiff {
 				a.picker.Refresh()
 				a.picker.SetSize(a.width, a.height)
-				a.picker.StartInputMode()
+				cmd := a.picker.StartInputMode()
 				a.viewMode = ViewPicker
+				return a, cmd
 			}
 			return a, nil
 
@@ -1099,6 +1100,8 @@ func (a App) handleBranchWarningKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Handle edit mode input
 	if a.branchWarning.IsEditMode() {
 		switch msg.String() {
+		case "ctrl+c":
+			return a.tryQuit()
 		case "esc":
 			// Cancel edit mode
 			a.branchWarning.CancelEditMode()
@@ -1107,16 +1110,9 @@ func (a App) handleBranchWarningKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// Confirm edit
 			a.branchWarning.CancelEditMode()
 			return a, nil
-		case "backspace":
-			a.branchWarning.DeleteInputChar()
-			return a, nil
-		default:
-			// Add character to branch name
-			if len(msg.String()) == 1 {
-				a.branchWarning.AddInputChar(rune(msg.String()[0]))
-			}
-			return a, nil
 		}
+		cmd := a.branchWarning.UpdateInput(msg)
+		return a, cmd
 	}
 
 	switch msg.String() {
@@ -1139,7 +1135,8 @@ func (a App) handleBranchWarningKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Start editing branch name if on an option that involves a branch
 		opt := a.branchWarning.GetSelectedOption()
 		if opt == BranchOptionCreateWorktree || opt == BranchOptionCreateBranch {
-			a.branchWarning.StartEditMode()
+			cmd := a.branchWarning.StartEditMode()
+			return a, cmd
 		}
 		return a, nil
 
@@ -1848,6 +1845,8 @@ func (a App) handlePickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Handle input mode (creating new PRD)
 	if a.picker.IsInputMode() {
 		switch msg.String() {
+		case "ctrl+c":
+			return a.tryQuit()
 		case "esc":
 			a.picker.CancelInputMode()
 			return a, nil
@@ -1864,16 +1863,9 @@ func (a App) handlePickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			a.picker.CancelInputMode()
 			return a, nil
-		case "backspace":
-			a.picker.DeleteInputChar()
-			return a, nil
-		default:
-			// Handle character input
-			if len(msg.String()) == 1 {
-				a.picker.AddInputChar(rune(msg.String()[0]))
-			}
-			return a, nil
 		}
+		cmd := a.picker.UpdateInput(msg)
+		return a, cmd
 	}
 
 	// Dismiss clean result on any key
@@ -1917,8 +1909,8 @@ func (a App) handlePickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return a, nil
 	case "n":
-		a.picker.StartInputMode()
-		return a, nil
+		cmd := a.picker.StartInputMode()
+		return a, cmd
 	case "e":
 		// Edit the selected PRD - launch interactive Claude session
 		entry := a.picker.GetSelectedEntry()
