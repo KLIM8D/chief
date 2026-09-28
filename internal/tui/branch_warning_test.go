@@ -1,21 +1,22 @@
 package tui
 
 import (
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func TestBranchWarningProtectedBranch(t *testing.T) {
+func TestBranchWarningWorktreePrompt(t *testing.T) {
 	bw := NewBranchWarning()
 	bw.SetSize(80, 24)
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
-	bw.SetDialogContext(DialogProtectedBranch)
+	bw.SetDialogContext(DialogWorktreePrompt)
 	bw.Reset()
 
 	// Should have 4 options: worktree+branch, branch only, continue on main, cancel
 	if len(bw.options) != 4 {
-		t.Fatalf("expected 4 options for protected branch, got %d", len(bw.options))
+		t.Fatalf("expected 4 options for worktree prompt, got %d", len(bw.options))
 	}
 
 	// First option should be "Create branch only" (recommended)
@@ -110,7 +111,7 @@ func TestBranchWarningNavigation(t *testing.T) {
 	bw := NewBranchWarning()
 	bw.SetSize(80, 24)
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
-	bw.SetDialogContext(DialogProtectedBranch)
+	bw.SetDialogContext(DialogWorktreePrompt)
 	bw.Reset()
 
 	// Start at index 0
@@ -161,7 +162,7 @@ func TestBranchWarningBranchEdit(t *testing.T) {
 	bw := NewBranchWarning()
 	bw.SetSize(80, 24)
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
-	bw.SetDialogContext(DialogProtectedBranch)
+	bw.SetDialogContext(DialogWorktreePrompt)
 	bw.Reset()
 
 	// Default branch name
@@ -208,7 +209,7 @@ func TestBranchWarningPathHints(t *testing.T) {
 	bw := NewBranchWarning()
 	bw.SetSize(80, 24)
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
-	bw.SetDialogContext(DialogProtectedBranch)
+	bw.SetDialogContext(DialogWorktreePrompt)
 
 	// Check that options have correct path hints
 	if bw.options[0].hint != "./ (current directory)" {
@@ -224,7 +225,7 @@ func TestBranchWarningPathHints(t *testing.T) {
 
 func TestBranchWarningRender(t *testing.T) {
 	// Test that Render doesn't panic for each context
-	contexts := []DialogContext{DialogProtectedBranch, DialogAnotherPRDRunning, DialogNoConflicts}
+	contexts := []DialogContext{DialogWorktreePrompt, DialogAnotherPRDRunning, DialogNoConflicts}
 	for _, ctx := range contexts {
 		bw := NewBranchWarning()
 		bw.SetSize(80, 24)
@@ -239,13 +240,41 @@ func TestBranchWarningRender(t *testing.T) {
 	}
 }
 
+func TestBranchWarningWorktreePromptRendersTitleAndBranchContext(t *testing.T) {
+	tests := []struct {
+		name   string
+		branch string
+	}{
+		{"protected branch", "main"},
+		{"feature branch", "feature/x"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bw := NewBranchWarning()
+			bw.SetSize(80, 24)
+			bw.SetContext(tt.branch, "auth", ".chief/worktrees/auth/")
+			bw.SetDialogContext(DialogWorktreePrompt)
+			bw.Reset()
+
+			output := bw.Render()
+			if !strings.Contains(output, tt.branch) {
+				t.Errorf("expected rendered output to contain branch %q, got:\n%s", tt.branch, output)
+			}
+			if !strings.Contains(output, "Worktree Recommended") {
+				t.Errorf("expected rendered output to contain 'Worktree Recommended', got:\n%s", output)
+			}
+		})
+	}
+}
+
 func TestBranchWarningGetDialogContext(t *testing.T) {
 	bw := NewBranchWarning()
 	bw.SetContext("main", "auth", ".chief/worktrees/auth/")
 
-	bw.SetDialogContext(DialogProtectedBranch)
-	if bw.GetDialogContext() != DialogProtectedBranch {
-		t.Error("expected DialogProtectedBranch")
+	bw.SetDialogContext(DialogWorktreePrompt)
+	if bw.GetDialogContext() != DialogWorktreePrompt {
+		t.Error("expected DialogWorktreePrompt")
 	}
 
 	bw.SetDialogContext(DialogAnotherPRDRunning)
